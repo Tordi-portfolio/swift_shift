@@ -1,0 +1,56 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}SwiftShipLogistics{% endblock %} · SwiftShipLogistics</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="{% url 'home' %}">Swift<span>Ship</span>Logistics</a>
+      <nav class="nav-links">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'shipments:track_lookup' %}">Track</a>
+        {% if user.is_authenticated %}
+          {% if user.is_staff %}
+            <a href="{% url 'shipments:manage_dashboard' %}">Staff dashboard</a>
+            <a href="{% url 'admin:index' %}">Admin</a>
+          {% else %}
+            <a href="{% url 'shipments:dashboard' %}">Dashboard</a>
+            <a href="{% url 'shipments:create' %}">New shipment</a>
+          {% endif %}
+          <form method="post" action="{% url 'accounts:logout' %}" class="inline-form">
+            {% csrf_token %}
+            <button type="submit" class="link-button">Log out ({{ user.username }})</button>
+          </form>
+        {% else %}
+          <a href="{% url 'accounts:login' %}">Log in</a>
+          <a class="btn btn-accent btn-sm" href="{% url 'accounts:register' %}">Sign up</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    {% if messages %}
+      <div class="container messages">
+        {% for message in messages %}
+          <div class="msg {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>SwiftShipLogistics</strong> · Headquartered in the United Kingdom · Shipping goods and services worldwide.</p>
+      <p class="muted">&copy; {% now "Y" %} SwiftShipLogistics. All rights reserved.</p>
+    </div>
+  </footer>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

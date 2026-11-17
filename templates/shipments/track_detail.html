@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tracking {{ shipment.tracking_id }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block content %}
+<section class="container page">
+  <div class="page-head">
+    <div>
+      <p class="muted small">Tracking ID</p>
+      <h1>{{ shipment.tracking_id }}</h1>
+      <p class="route">{{ shipment.origin_city }}, {{ shipment.origin_country }} → {{ shipment.destination_city }}, {{ shipment.destination_country }}</p>
+    </div>
+    <span class="badge badge-lg {{ shipment.status }}">{{ shipment.get_status_display }}</span>
+  </div>
+
+  {% if shipment.status == "cancelled" %}
+    <div class="msg error">This shipment has been cancelled. Please contact us if you have any questions.</div>
+  {% elif shipment.status == "delivered" %}
+    <div class="msg success">This shipment has been delivered. Thank you for shipping with SwiftShipLogistics!</div>
+  {% endif %}
+
+  {% if shipment.status != "cancelled" %}
+  <div class="card">
+    <ol class="stepper">
+      {% for step in steps %}
+        <li class="{% if step.done %}done{% elif step.current %}current{% endif %}">
+          <span class="dot">{% if step.done %}✓{% else %}{{ forloop.counter }}{% endif %}</span>
+          <span class="step-label">{{ step.label }}</span>
+        </li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+
+  <div class="grid-main">
+    <div>
+      <div class="card">
+        <h2>Route map</h2>
+        <div id="map" class="map" role="img" aria-label="Map showing the route of the shipment"></div>
+        <p class="legend">
+          <span><i class="key key-origin"></i> Origin</span>
+          <span><i class="key key-current"></i> Current location</span>
+          <span><i class="key key-dest"></i> Destination</span>
+          <span><i class="key key-line"></i> Route travelled</span>
+          <span><i class="key key-dash"></i> Remaining</span>
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Tracking history</h2>
+        <ul class="timeline">
+          {% for u in updates %}
+            <li class="{% if forloop.first %}latest{% endif %}">
+              <div class="t-head">
+                <span class="badge {{ u.status }}">{{ u.get_status_display }}</span>
+                <span class="muted small">{{ u.created_at|date:"j M Y, H:i" }}</span>
+              </div>
+              {% if u.location or u.country %}
+                <p class="t-loc">📍 {% if u.location %}{{ u.location }}{% endif %}{% if u.country %}{% if u.location %}, {% endif %}{{ u.country }}{% endif %}</p>
+              {% endif %}
+              {% if u.note %}<p class="t-note">{{ u.note }}</p>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <aside>
+      <div class="card">
+        <h2>Shipment details</h2>
+        <dl class="details">
+          <dt>Current status</dt><dd>{{ shipment.get_status_display }}</dd>
+          {% if latest and latest.location %}
+            <dt>Last known location</dt><dd>{{ latest.location }}{% if latest.country %}, {{ latest.country }}{% endif %}</dd>
+          {% endif %}
+          <dt>Estimated delivery</dt><dd>{{ shipment.estimated_delivery|date:"j M Y"|default:"To be confirmed" }}</dd>
+          <dt>Type</dt><dd>{{ shipment.get_service_type_display }}</dd>
+          <dt>Requested</dt><dd>{{ shipment.created_at|date:"j M Y" }}</dd>
+          {% if can_see_private %}
+            <dt>Description</dt><dd>{{ shipment.item_description }}</dd>
+            {% if shipment.weight_kg %}<dt>Weight</dt><dd>{{ shipment.weight_kg }} kg × {{ shipment.quantity }}</dd>{% endif %}
+            <dt>Pick-up address</dt><dd>{{ shipment.origin_address|linebreaksbr }}</dd>
+            <dt>Delivery address</dt><dd>{{ shipment.destination_address|linebreaksbr }}</dd>
+            <dt>Receiver</dt><dd>{{ shipment.receiver_name }}<br>{{ shipment.receiver_phone }}</dd>
+          {% endif %}
+        </dl>
+        {% if not can_see_private %}
+          <p class="muted small">Log in to the account that made this request to see full shipment details.</p>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+</section>
+
+{{ map_data|json_script:"map-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/track-map.js' %}"></script>
+{% endblock %}

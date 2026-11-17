@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Shipment requested{% endblock %}
+
+{% block content %}
+<section class="container narrow">
+  <div class="card center success-card">
+    <div class="check">✓</div>
+    <h1>Your shipment request is in!</h1>
+    <p class="muted">Keep this tracking ID. You can use it any time to follow your {{ shipment.get_service_type_display|lower }} from {{ shipment.origin_country }} to {{ shipment.destination_country }}.</p>
+
+    <div class="tracking-id" id="tracking-id">{{ shipment.tracking_id }}</div>
+    <button type="button" class="btn btn-ghost-dark btn-sm" id="copy-btn">Copy tracking ID</button>
+
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ shipment.get_absolute_url }}">Track this shipment</a>
+      <a class="btn btn-ghost-dark" href="{% url 'shipments:dashboard' %}">Back to dashboard</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    var btn = this;
+    var text = document.getElementById("tracking-id").textContent.trim();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () {
+        btn.textContent = "Copied!";
+      });
+    }
+  });
+</script>
+{% endblock %}

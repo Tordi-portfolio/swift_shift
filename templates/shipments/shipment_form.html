@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Request a shipment{% endblock %}
+
+{% block content %}
+<section class="container page">
+  <div class="page-head">
+    <div>
+      <h1>Request a shipment</h1>
+      <p class="muted">Fill in the details below. You'll get a tracking ID as soon as you submit.</p>
+    </div>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="msg error">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+    {% endif %}
+
+    <div class="card form-section">
+      <h2>1. What are you sending?</h2>
+      {% include "partials/field.html" with field=form.service_type %}
+      {% include "partials/field.html" with field=form.item_description %}
+      <div class="grid-2">
+        {% include "partials/field.html" with field=form.weight_kg %}
+        {% include "partials/field.html" with field=form.quantity %}
+      </div>
+      <div class="grid-2">
+        {% include "partials/field.html" with field=form.declared_value %}
+        {% include "partials/field.html" with field=form.currency %}
+      </div>
+    </div>
+
+    <div class="grid-2 align-start">
+      <div class="card form-section">
+        <h2>2. From (pick-up)</h2>
+        {% include "partials/field.html" with field=form.origin_country %}
+        {% include "partials/field.html" with field=form.origin_city %}
+        {% include "partials/field.html" with field=form.origin_address %}
+      </div>
+      <div class="card form-section">
+        <h2>3. To (destination)</h2>
+        {% include "partials/field.html" with field=form.destination_country %}
+        {% include "partials/field.html" with field=form.destination_city %}
+        {% include "partials/field.html" with field=form.destination_address %}
+      </div>
+    </div>
+
+    <div class="card form-section">
+      <h2>4. Who receives it?</h2>
+      <div class="grid-3">
+        {% include "partials/field.html" with field=form.receiver_name %}
+        {% include "partials/field.html" with field=form.receiver_phone %}
+        {% include "partials/field.html" with field=form.receiver_email %}
+      </div>
+    </div>
+
+    <button class="btn btn-accent btn-lg" type="submit">Submit request &amp; get tracking ID</button>
+  </form>
+</section>
+{% endblock %}

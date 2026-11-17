@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manage {{ shipment.tracking_id }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block content %}
+<section class="container page">
+  <p class="small"><a href="{% url 'shipments:manage_dashboard' %}">← All shipments</a></p>
+  <div class="page-head">
+    <div>
+      <p class="muted small">Tracking ID</p>
+      <h1>{{ shipment.tracking_id }}</h1>
+      <p class="route">{{ shipment.origin_city }}, {{ shipment.origin_country }} → {{ shipment.destination_city }}, {{ shipment.destination_country }}</p>
+    </div>
+    <div class="head-actions">
+      <span class="badge badge-lg {{ shipment.status }}">{{ shipment.get_status_display }}</span>
+      <a class="btn btn-sm btn-ghost-dark" href="{{ shipment.get_absolute_url }}" target="_blank">Customer view ↗</a>
+    </div>
+  </div>
+
+  <div class="grid-main">
+    <div>
+      <div class="card">
+        <h2>Update this shipment</h2>
+        <p class="muted small">Saving adds a new entry to the customer's tracking history and moves the marker on their map.</p>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="msg error">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+          {% endif %}
+          <div class="grid-2">
+            {% include "partials/field.html" with field=form.status %}
+            {% include "partials/field.html" with field=form.estimated_delivery %}
+          </div>
+          <div class="grid-2">
+            {% include "partials/field.html" with field=form.location %}
+            {% include "partials/field.html" with field=form.country %}
+          </div>
+
+          <div class="field">
+            <label>Pin the exact location <span class="muted small">(click the map, or type coordinates below)</span></label>
+            <div id="picker" class="map map-sm"></div>
+          </div>
+          <div class="grid-2">
+            {% include "partials/field.html" with field=form.latitude %}
+            {% include "partials/field.html" with field=form.longitude %}
+          </div>
+          {% include "partials/field.html" with field=form.note %}
+          <button class="btn btn-accent" type="submit">Save update</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Tracking history</h2>
+        <ul class="timeline">
+          {% for u in updates %}
+            <li class="{% if forloop.first %}latest{% endif %}">
+              <div class="t-head">
+                <span class="badge {{ u.status }}">{{ u.get_status_display }}</span>
+                <span class="muted small">{{ u.created_at|date:"j M Y, H:i" }}</span>
+                <a class="small" href="{% url 'admin:shipments_shipmentupdate_change' u.pk %}">edit</a>
+              </div>
+              {% if u.location or u.country %}
+                <p class="t-loc">📍 {{ u.location }}{% if u.country %}{% if u.location %}, {% endif %}{{ u.country }}{% endif %}</p>
+              {% endif %}
+              {% if u.note %}<p class="t-note">{{ u.note }}</p>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <aside>
+      <div class="card">
+        <h2>Customer</h2>
+        <dl class="details">
+          <dt>Name</dt><dd>{{ shipment.user.get_full_name|default:shipment.user.username }}</dd>
+          <dt>Email</dt><dd>{{ shipment.user.email }}</dd>
+          <dt>Username</dt><dd>{{ shipment.user.username }}</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h2>Shipment</h2>
+        <dl class="details">
+          <dt>Type</dt><dd>{{ shipment.get_service_type_display }}</dd>
+          <dt>Description</dt><dd>{{ shipment.item_description|linebreaksbr }}</dd>
+          {% if shipment.weight_kg %}<dt>Weight</dt><dd>{{ shipment.weight_kg }} kg × {{ shipment.quantity }}</dd>{% endif %}
+          {% if shipment.declared_value %}<dt>Declared value</dt><dd>{{ shipment.declared_value }} {{ shipment.currency }}</dd>{% endif %}
+          <dt>Pick-up address</dt><dd>{{ shipment.origin_address|linebreaksbr }}<br>{{ shipment.origin_city }}, {{ shipment.origin_country }}</dd>
+          <dt>Delivery address</dt><dd>{{ shipment.destination_address|linebreaksbr }}<br>{{ shipment.destination_city }}, {{ shipment.destination_country }}</dd>
+          <dt>Receiver</dt><dd>{{ shipment.receiver_name }}<br>{{ shipment.receiver_phone }}{% if shipment.receiver_email %}<br>{{ shipment.receiver_email }}{% endif %}</dd>
+          <dt>Requested</dt><dd>{{ shipment.created_at|date:"j M Y, H:i" }}</dd>
+        </dl>
+        <p class="small"><a href="{% url 'admin:shipments_shipment_change' shipment.pk %}">Edit all fields in Django admin</a></p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+{{ picker_data|json_script:"picker-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/manage-map.js' %}"></script>
+{% endblock %}

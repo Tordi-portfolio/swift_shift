@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Create account{% endblock %}
+
+{% block content %}
+<section class="container narrow">
+  <div class="card auth-card">
+    <h1>Create your account</h1>
+    <p class="muted">Get your own dashboard and start shipping worldwide.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="msg error">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+      {% endif %}
+      {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+      <button class="btn btn-primary btn-block" type="submit">Sign up</button>
+    </form>
+    <p class="muted center">Already registered? <a href="{% url 'accounts:login' %}">Log in</a></p>
+  </div>
+</section>
+{% endblock %}

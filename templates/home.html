@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Ship goods and services worldwide{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container hero-inner">
+    <h1>Send it anywhere in the world, track every step.</h1>
+    <p class="lead">SwiftShipLogistics moves goods and services between countries. Create an account, request a shipment, and follow it live on the map until it reaches its destination.</p>
+
+    <form class="track-box" method="get" action="{% url 'shipments:track_lookup' %}">
+      <input class="input" type="text" name="tracking_id" placeholder="Enter your tracking ID, e.g. SSL-ABCD123456" required>
+      <button class="btn btn-accent" type="submit">Track shipment</button>
+    </form>
+
+    <div class="hero-actions">
+      {% if user.is_authenticated %}
+        <a class="btn btn-light" href="{% url 'shipments:create' %}">Request a shipment</a>
+        <a class="btn btn-ghost" href="{% url 'shipments:dashboard' %}">Go to my dashboard</a>
+      {% else %}
+        <a class="btn btn-light" href="{% url 'accounts:register' %}">Create a free account</a>
+        <a class="btn btn-ghost" href="{% url 'accounts:login' %}">Log in</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2>How it works</h2>
+    <div class="grid-3">
+      <div class="card">
+        <div class="step-num">1</div>
+        <h3>Create your account</h3>
+        <p>Register in a minute and get your own dashboard where all your shipments live.</p>
+      </div>
+      <div class="card">
+        <div class="step-num">2</div>
+        <h3>Request a shipment</h3>
+        <p>Tell us what you're sending, where it's going and who receives it. You instantly get a unique tracking ID.</p>
+      </div>
+      <div class="card">
+        <div class="step-num">3</div>
+        <h3>Track it live</h3>
+        <p>Our team updates the location at every stage. See the route on the map until delivery.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="container">
+    <h2>Why SwiftShipLogistics</h2>
+    <div class="grid-3">
+      <div class="card"><h3>Worldwide reach</h3><p>Based in the United Kingdom, operating across Europe, Africa, the Americas, the Middle East, Asia and Oceania.</p></div>
+      <div class="card"><h3>Goods and services</h3><p>Parcels, freight and cross-border services, all handled through one simple request form.</p></div>
+      <div class="card"><h3>Full visibility</h3><p>Status history, current location and a route map, available any time with your tracking ID.</p></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Staff dashboard{% endblock %}
+
+{% block content %}
+<section class="container page">
+  <div class="page-head">
+    <div>
+      <h1>Staff dashboard</h1>
+      <p class="muted">All customer shipments in one place. Only staff can see this page.</p>
+    </div>
+    <a class="btn btn-ghost-dark" href="{% url 'admin:index' %}">Open Django admin</a>
+  </div>
+
+  <div class="grid-4">
+    <div class="card stat"><span class="stat-num">{{ total }}</span><span class="muted">Total shipments</span></div>
+    <div class="card stat"><span class="stat-num">{{ active }}</span><span class="muted">In progress</span></div>
+    <div class="card stat"><span class="stat-num">{{ delivered }}</span><span class="muted">Delivered</span></div>
+    <div class="card stat"><span class="stat-num">{{ customers }}</span><span class="muted">Customers</span></div>
+  </div>
+
+  <div class="chips">
+    <a class="chip {% if not status %}active{% endif %}" href="{% url 'shipments:manage_dashboard' %}{% if query %}?q={{ query|urlencode }}{% endif %}">All</a>
+    {% for card in status_cards %}
+      <a class="chip {% if status == card.value %}active{% endif %}" href="?status={{ card.value }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}">{{ card.label }} <b>{{ card.count }}</b></a>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <form method="get" class="filter-bar">
+      <input class="input" type="search" name="q" value="{{ query }}" placeholder="Search tracking ID, customer, receiver, city or country">
+      <select class="input" name="status">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-primary" type="submit">Search</button>
+      {% if query or status %}<a class="btn btn-ghost-dark" href="{% url 'shipments:manage_dashboard' %}">Clear</a>{% endif %}
+    </form>
+
+    {% if page.object_list %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>Tracking ID</th><th>Customer</th><th>Route</th><th>Type</th><th>Status</th><th>ETA</th><th>Requested</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for s in page.object_list %}
+          <tr>
+            <td><strong>{{ s.tracking_id }}</strong></td>
+            <td>{{ s.user.get_full_name|default:s.user.username }}<br><span class="muted small">{{ s.user.email }}</span></td>
+            <td>{{ s.origin_city }}, {{ s.origin_country }} → {{ s.destination_city }}, {{ s.destination_country }}</td>
+            <td>{{ s.get_service_type_display }}</td>
+            <td><span class="badge {{ s.status }}">{{ s.get_status_display }}</span></td>
+            <td>{{ s.estimated_delivery|date:"j M Y"|default:"—" }}</td>
+            <td>{{ s.created_at|date:"j M Y" }}</td>
+            <td><a class="btn btn-sm btn-primary" href="{% url 'shipments:manage_shipment' s.tracking_id %}">Manage</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page.has_other_pages %}
+    <div class="pager">
+      {% if page.has_previous %}<a class="btn btn-sm btn-ghost-dark" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.previous_page_number }}">← Previous</a>{% endif %}
+      <span class="muted small">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+      {% if page.has_next %}<a class="btn btn-sm btn-ghost-dark" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.next_page_number }}">Next →</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+      <div class="empty"><p>No shipments match.</p></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
